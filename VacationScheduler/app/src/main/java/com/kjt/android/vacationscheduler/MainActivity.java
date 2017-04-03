@@ -12,9 +12,9 @@ import android.widget.CalendarView;
 
 
 public class MainActivity extends AppCompatActivity {
-
-    String dbName = "vacation.db"; // name of Database;
-    String tableName = "vacation"; // name of Table;
+    public static Context mainAC ;
+    String dbName = "vacationD.db"; // name of Database;
+    String tableName = "vacationDB"; // name of Table;
     int dbMode = Context.MODE_PRIVATE;
     // Database 관련 객체들
     SQLiteDatabase db;
@@ -24,23 +24,25 @@ public class MainActivity extends AppCompatActivity {
     CalendarView calendar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
+        mainAC = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         calendar = (CalendarView) findViewById(R.id.calendarView);
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener(){
             @Override
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-//                Toast.makeText(getApplicationContext(),dayOfMonth+"/"+month+"/"+year,Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(getApplicationContext(),dialogPopupActivity.class);
-                intent.putExtra("date",year+"년 "+month+"월 "+dayOfMonth+"일");
+//                intent.putExtra("date",year+"년 "+month+"월 "+dayOfMonth+"일");
+                intent.putExtra("year",year);
+                intent.putExtra("month",month);
+                intent.putExtra("dayOfMonth",dayOfMonth);
                 startActivity(intent);
 
             }
         });
         helper = new MySQLiteOpenHelper(MainActivity.this, // 현재 화면의 context
 
-                "vacation.db", // 파일명
+                "vacationD.db", // 파일명
 
                 null, // 커서 팩토리
 
@@ -48,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 1. 데이터 저장
 
-//        insert("2017-03-31", "2017-04-01", 1, "휴가임.");
-
+//        insert("2017-03-31", "2017-04-01", 1, "휴가임2.");
 
         // 2. 수정하기
 //        update("유저1", 58); // 나이만 수정하기
@@ -61,13 +62,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
     // insert
 
-    public void insert(String sDay, String eDay, int ing, String memo) {
+    public void insert(String sDay, String eDay, int dCount, String memo) {
 
         db = helper.getWritableDatabase(); // db 객체를 얻어온다. 쓰기 가능
-
-
 
         ContentValues values = new ContentValues();
 
@@ -79,11 +79,11 @@ public class MainActivity extends AppCompatActivity {
 
         values.put("endDay", eDay);
 
-        values.put("ing", ing);
+        values.put("dCount", dCount);
 
         values.put("memo", memo);
 
-        db.insert("vacationD", null, values); // 테이블/널컬럼핵/데이터(널컬럼핵=디폴트)
+        db.insert("vacationDB", null, values); // 테이블/널컬럼핵/데이터(널컬럼핵=디폴트)
 
         // tip : 마우스를 db.insert에 올려보면 매개변수가 어떤 것이 와야 하는지 알 수 있다.
 
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
         values.put("age", age);    //age 값을 수정
 
-        db.update("vacationD", values, "name=?", new String[]{name});
+        db.update("vacationDB", values, "name=?", new String[]{name});
 
         /*
 
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         db = helper.getWritableDatabase();
 
-        db.delete("vacationD", "startDay=?", new String[]{sday});
+        db.delete("vacationDB", "startDay=?", new String[]{sday});
 
         Log.i("db", sday + "정상적으로 삭제 되었습니다.");
 
@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
 
         db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
 
-        Cursor c = db.query("vacationD", null, null, null, null, null, null);
+        Cursor c = db.query("vacationDB", null, null, null, null, null, null);
 
 
 
@@ -179,11 +179,11 @@ public class MainActivity extends AppCompatActivity {
 
             String eday = c.getString(c.getColumnIndex("endDay"));
 
-            int ing = c.getInt(c.getColumnIndex("ing"));
+            int dCount = c.getInt(c.getColumnIndex("dCount"));
 
             String memo = c.getString(c.getColumnIndex("memo"));
 
-            Log.i("db", "id: " + _id + ", startDay : " + sday + ", endDay : " + eday + ", ing : " + ing
+            Log.i("db", "id: " + _id + ", startDay : " + sday + ", endDay : " + eday + ", dCount : " + dCount
 
                     + ", address : " + memo);
 
