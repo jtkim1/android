@@ -13,12 +13,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+
+import static java.lang.Integer.parseInt;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -30,15 +35,21 @@ public class MainActivity extends AppCompatActivity {
     Calendar mCal;
     int thisYear, thisMonth;
 
+    List<SaveDateClass> saveDateArray = new ArrayList<SaveDateClass>();
+    List<SaveDateClass> saveYearMonthArray = new ArrayList<SaveDateClass>();
 
-    // Database 관련 객체들
+            // Database 관련 객체들
     SQLiteDatabase db;
     MySQLiteOpenHelper helper;
+    String SQLTableName = "calendar_vacationDB";
+    String SQLTableVCountName = "vacation_countTable";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mainAC = MainActivity.this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
 
         // Calendar 객체 생성
@@ -48,18 +59,58 @@ public class MainActivity extends AppCompatActivity {
         thisMonth = mCal.get(Calendar.MONTH)+1;
 
         //DB 만들기 or 열기
+
         helper = new MySQLiteOpenHelper(MainActivity.this, // 현재 화면의 context
 
-                "vacationD1.db", // 파일명
+                "vacationDataBaseTest7.db", // 파일명
 
                 null, // 커서 팩토리
 
                 1); // 버전 번호
-
+        selectYearMonth(2017,04);
+//        select();
+//        delete("1");
+        final int usingCount = selecUsingVacationCount();
+        Log.d("db","usingcount="+usingCount);
         select();
 
         // 달력 세팅
         setCalendarDate(thisYear, thisMonth);
+
+        //spinner 객체 생성
+        Spinner spinner = (Spinner) findViewById(R.id.vc_vacation_total_count_spinner);
+
+        final ArrayAdapter<CharSequence> adapterCount = ArrayAdapter.createFromResource(this,
+                R.array.spinnerVacationCountArray, android.R.layout.simple_spinner_item);
+
+        adapterCount.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+
+        spinner.setAdapter(adapterCount);
+        int vTotalCount = selectVacationTotalCount();
+        if(vTotalCount > 0){
+            spinner.setSelection(vTotalCount-1);
+        }else{
+            spinner.setSelection(14);
+        }
+
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                Toast.makeText(getApplicationContext(),adapter.getItem(position)+"을선택함.", Toast.LENGTH_LONG).show();
+                Log.d("main","select total="+adapterCount.getItem(position));
+                updateTotalCount(parseInt((String)adapterCount.getItem(position)));
+                changVacationCount();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
 
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -70,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("year",thisYear);
                 intent.putExtra("month",(thisMonth-1));
                 intent.putExtra("dayOfMonth",adapter.getday(position));
+
                 Log.d("MainActivity","thisYear="+thisYear);
                 Log.d("MainActivity","thisMonth="+thisMonth);
                 Log.d("MainActivity","day="+ adapter.getday(position));
@@ -79,6 +131,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+    //남은 휴가 일수를 계산 해주는 함수.
+    public void changVacationCount(){
+        int totalCount = selectVacationTotalCount();
+        int usingcount = selecUsingVacationCount();
+
+        TextView remainderCount = (TextView)findViewById(R.id.remainderTextValue);
+        remainderCount.setText((totalCount-usingcount)+" 일");
+    }
+    //월이 변경될때에 대한 함수.
     public void changMonth(View v){
         switch(v.getId()){
             case R.id.prev:
@@ -109,8 +170,11 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-
+    //달력 그리는 함수.
     public void setCalendarDate(int year , int month){
+        Log.d("Mainactivity","setCalendarDate_year="+year);
+        Log.d("Mainactivity","setCalendarDate_month="+month);
+        selectYearMonth(year,month);
         arrData1 = new ArrayList();
         //title 현재 년도월 표시
         TextView ViewTextTitle = (TextView) findViewById(R.id.maintext);
@@ -142,8 +206,8 @@ public class MainActivity extends AppCompatActivity {
         mGridView.setAdapter(adapter);
     }
 
-
-    public void insert(String sDay, String eDay, int dCount, String memo) {
+    //db 에 휴가 저장하는 함수.
+    public void insert(int sYear,int sMonth, int sDay, String[] eArrayDate, int dCount, String memo) {
         Log.d("Mainactivity","insert");
         db = helper.getWritableDatabase(); // db 객체를 얻어온다. 쓰기 가능
 
@@ -153,21 +217,39 @@ public class MainActivity extends AppCompatActivity {
 
         // 데이터의 삽입은 put을 이용한다.
 
-        values.put("startDay", sDay);
-
-        values.put("endDay", eDay);
+        values.put("sYear", sYear);
+        values.put("sMonth", sMonth);
+        values.put("sDay", sDay);
+        values.put("eYear", eArrayDate[0]);
+        values.put("eMonth", eArrayDate[1]);
+        values.put("eDay", eArrayDate[2]);
 
         values.put("dCount", dCount);
 
         values.put("memo", memo);
 
-        db.insert("calendar_vacationDB", null, values); // 테이블/널컬럼핵/데이터(널컬럼핵=디폴트)
+        db.insert(SQLTableName, null, values); // 테이블/널컬럼핵/데이터(널컬럼핵=디폴트)
 
         // tip : 마우스를 db.insert에 올려보면 매개변수가 어떤 것이 와야 하는지 알 수 있다.
 
     }
+    public void updateTotalCount(int totalCount) {
+        Log.d("Mainactivity","updateTotalCount="+totalCount);
+        db = helper.getWritableDatabase(); // db 객체를 얻어온다. 쓰기 가능
+
+        ContentValues values = new ContentValues();
+
+        // db.insert의 매개변수인 values가 ContentValues 변수이므로 그에 맞춤
+
+        // 데이터의 삽입은 put을 이용한다.
+
+        values.put("total", totalCount);
 
 
+        db.update(SQLTableVCountName, values, null,null);
+
+
+    }
 
     // update
 
@@ -181,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
 
         values.put("age", age);    //age 값을 수정
 
-        db.update("calendar_vacationDB", values, "name=?", new String[]{name});
+        db.update(SQLTableName, values, "name=?", new String[]{name});
 
         /*
 
@@ -203,24 +285,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
     // delete
 
     public void delete (String sday) {
 
+
         db = helper.getWritableDatabase();
 
-        db.delete("calendar_vacationDB", "startDay=?", new String[]{sday});
+        db.delete(SQLTableName, "dCount=?", new String[]{sday});
 
         Log.i("db", sday + "정상적으로 삭제 되었습니다.");
 
     }
 
-
-
-    // select
-
+    //전체 휴가 db 검색하는 함수.
     public void select() {
 
 
@@ -231,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
 
         db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
 
-        Cursor c = db.query("calendar_vacationDB", null, null, null, null, null, null);
+        Cursor c = db.query(SQLTableName, null, null, null, null, null, null, null);
 
 
 
@@ -246,24 +324,130 @@ public class MainActivity extends AppCompatActivity {
          */
 
 
-
+        int i = 0;
         while (c.moveToNext()) {
 
             // c의 int가져와라 ( c의 컬럼 중 id) 인 것의 형태이다.
 
             int _id = c.getInt(c.getColumnIndex("_id"));
 
-            String sday = c.getString(c.getColumnIndex("startDay"));
+            String sYear = c.getString(c.getColumnIndex("sYear"));
+            String sMonth = c.getString(c.getColumnIndex("sMonth"));
+            String sDay = c.getString(c.getColumnIndex("sDay"));
 
-            String eday = c.getString(c.getColumnIndex("endDay"));
+            String eYear = c.getString(c.getColumnIndex("eYear"));
+            String eMonth = c.getString(c.getColumnIndex("eMonth"));
+            String eDay = c.getString(c.getColumnIndex("eDay"));
+
 
             int dCount = c.getInt(c.getColumnIndex("dCount"));
 
             String memo = c.getString(c.getColumnIndex("memo"));
 
-            Log.i("db", "id: " + _id + ", startDay : " + sday + ", endDay : " + eday + ", dCount : " + dCount
+            saveDateArray.add(new SaveDateClass(sYear, sMonth, sDay, eYear, eMonth, eDay,dCount,memo));
+            Log.d("main","==="+saveDateArray.get(i).getsDate()[2]);
+            i++;
+            Log.i("db", "id: " + _id + ", sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
+                    + ", eYear : " + eYear + ", eMonth : " + eMonth + ", eDay : " + eDay
+                    + ", dCount : " + dCount + ", address : " + memo);
 
-                    + ", address : " + memo);
+        }
+
+    }
+    //휴가 전체 갯수 검색하는 함수.
+    public int selectVacationTotalCount() {
+
+//        db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
+//        String  sql = "select * from "+SQLTableVCountName+";";
+//        SQLTableVCountName
+        db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
+
+        Cursor c = db.query(SQLTableVCountName, null, null, null, null, null, null, null);
+
+
+        Log.d("main","selectVacationTotalCount="+c.moveToNext());
+
+        int total = c.getInt(c.getColumnIndex("total"));
+        Log.i("mainActivity", "selectVacationTotalCount total : " + total );
+
+        return total;
+
+    }
+    //휴가에서 중복된것 빼고 총 사용한 개수 검색하는 함수.
+    public int selecUsingVacationCount() {
+
+        db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
+        String  sql = "select distinct sYear, sMonth, sDay from "+SQLTableName+";";
+        Cursor c = db.rawQuery(sql,null);
+        int count = 0;
+        while (c.moveToNext()) {
+
+            // c의 int가져와라 ( c의 컬럼 중 id) 인 것의 형태이다.
+
+            String sYear = c.getString(c.getColumnIndex("sYear"));
+            String sMonth = c.getString(c.getColumnIndex("sMonth"));
+            String sDay = c.getString(c.getColumnIndex("sDay"));
+
+            Log.i("db", "selecUsingVacationCount_ sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
+                    + ", eYear : ");
+
+            count++;
+
+        }
+        return count;
+
+    }
+    public void selectYearMonth(int year, int month) {
+
+
+
+        // 1) db의 데이터를 읽어와서, 2) 결과 저장, 3)해당 데이터를 꺼내 사용
+
+
+
+        db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
+        String  sql = "select * from "+SQLTableName+" where sYear = "+year+" and sMonth= "+month+";";
+        Cursor c = db.rawQuery(sql,null);
+
+
+
+        /*
+
+         * 위 결과는 select * from student 가 된다. Cursor는 DB결과를 저장한다. public Cursor
+
+         * query (String table, String[] columns, String selection, String[]
+
+         * selectionArgs, String groupBy, String having, String orderBy)
+
+         */
+
+        saveYearMonthArray.clear();
+        int i = 0;
+        while (c.moveToNext()) {
+
+            // c의 int가져와라 ( c의 컬럼 중 id) 인 것의 형태이다.
+
+            int _id = c.getInt(c.getColumnIndex("_id"));
+
+            String sYear = c.getString(c.getColumnIndex("sYear"));
+            String sMonth = c.getString(c.getColumnIndex("sMonth"));
+            String sDay = c.getString(c.getColumnIndex("sDay"));
+
+            String eYear = c.getString(c.getColumnIndex("eYear"));
+            String eMonth = c.getString(c.getColumnIndex("eMonth"));
+            String eDay = c.getString(c.getColumnIndex("eDay"));
+
+
+            int dCount = c.getInt(c.getColumnIndex("dCount"));
+
+            String memo = c.getString(c.getColumnIndex("memo"));
+
+            saveYearMonthArray.add(new SaveDateClass(sYear, sMonth, sDay, eYear, eMonth, eDay,dCount,memo));
+            Log.d("main","==="+saveYearMonthArray.get(i).getsDate()[2]);
+            i++;
+            Log.i("db", "id: " + _id + ", sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
+                    + ", eYear : " + eYear + ", eMonth : " + eMonth + ", eDay : " + eDay
+                    + ", dCount : " + dCount + ", address : " + memo);
 
         }
 
@@ -304,6 +488,7 @@ class DateAdapter extends BaseAdapter {
 
 
         TextView ViewText = (TextView)convertView.findViewById(R.id.ViewText);
+//        GridView gridView = (GridView)convertView.findViewById(R.id.calGrid);
         if(arrData.get(position) == null)
             ViewText.setText("");
         else
@@ -312,7 +497,7 @@ class DateAdapter extends BaseAdapter {
             if(arrData.get(position).getDayofweek() == 1)
             {
                 ViewText.setTextColor(Color.RED);
-                ViewText.setBackgroundColor(Color.BLACK);
+
 
             }
             else if(arrData.get(position).getDayofweek() == 7)
@@ -325,6 +510,16 @@ class DateAdapter extends BaseAdapter {
                 ViewText.setTextColor(Color.BLACK);
 
             }
+
+            for(int i=0 ; i<((MainActivity)MainActivity.mainAC).saveYearMonthArray.size() ; i++){
+
+                if(arrData.get(position).getDay() == parseInt(((MainActivity)MainActivity.mainAC).saveYearMonthArray.get(i).getsDate()[2])){
+//                    ViewText.setBackgroundColor(Color.MAGENTA);
+                    convertView.setBackgroundColor(Color.YELLOW);
+                }
+
+            }
+//            Log.d("main", "JT:>>>>>>>>"+((MainActivity)MainActivity.mainAC).saveDateArray.get(0).getsDate()[2]);
         }
         ViewText.setHeight(150);
 

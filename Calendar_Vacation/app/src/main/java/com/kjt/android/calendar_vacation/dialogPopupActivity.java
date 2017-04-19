@@ -13,7 +13,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -24,6 +23,8 @@ public class dialogPopupActivity extends Activity {
 
     String sDate, dCount;
     Integer selectYear, selectMonth, selectday;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +46,7 @@ public class dialogPopupActivity extends Activity {
             selectday = intent.getExtras().getInt("dayOfMonth");
 
             sDate = selectYear+"년 "+selectMonth+"월 "+selectday+"일";
-            Toast.makeText(getApplicationContext(),sDate,Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(),sDate,Toast.LENGTH_LONG).show();
             TextView startDay = (TextView) findViewById(R.id.vc_dialog_startday_value);
             startDay.setText(sDate);
         }
@@ -96,14 +97,40 @@ public class dialogPopupActivity extends Activity {
 
         cCal.set(selectYear,(selectMonth-1),selectday);
         java.util.Date changStartDate = cCal.getTime();
+        String[] eArrayDate = formatDate1.format(changStartDate).split("-");
 
         Log.d("dialogPopupActivity","formatDate1.format(changStartDate)="+formatDate1.format(changStartDate));
         Log.d("dialogPopupActivity","formatDate.format(changEndDate)="+formatDate.format(changEndDate));
         Log.d("dialogPopupActivity","Integer.parseInt(dCount)="+Integer.parseInt(dCount));
+//        ((MainActivity)MainActivity.mainAC).insert(formatDate1.format(changStartDate), formatDate.format(changEndDate),Integer.parseInt(dCount),"1");
+        int count = 0;
+        for(int i=0 ;  ; i++){
+            int dayMonth = selectMonth-1;
+            int dayDay = selectday+i;
 
-        ((MainActivity)MainActivity.mainAC).insert(formatDate1.format(changStartDate), formatDate.format(changEndDate),Integer.parseInt(dCount),"1");
+            cCal.set(selectYear,dayMonth,dayDay);
+            int dayNum = cCal.get(Calendar.DAY_OF_WEEK);
 
-        ((MainActivity)MainActivity.mainAC).select();
+
+            if(dayNum == 1 || dayNum == 7){
+                //토요일,일요일은 제외
+            }else if(Integer.parseInt(dCount) == count){
+                //휴가일수만큼 돌았으면 중지.
+                break;
+            }else{
+                //휴가일수만큼 저장
+                ((MainActivity)MainActivity.mainAC).insert(selectYear,(cCal.get(Calendar.MONTH)+1),cCal.get(Calendar.DATE),eArrayDate,1,"1");
+                count++;
+            }
+
+        }
+//        ((MainActivity)MainActivity.mainAC).insert(selectYear,selectMonth,selectday,eArrayDate,1,"1");
+        ((MainActivity)MainActivity.mainAC).selectYearMonth(selectYear,selectMonth);
+        ((MainActivity)MainActivity.mainAC).setCalendarDate(selectYear,selectMonth);
+        ((MainActivity)MainActivity.mainAC).changVacationCount();
+
+
+
         finish();
     }
     public void vcCancelButton(View v){
