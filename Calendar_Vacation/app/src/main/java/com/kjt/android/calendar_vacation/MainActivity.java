@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
         // Calendar 객체 생성
         mCalToday = Calendar.getInstance();
         mCal = Calendar.getInstance();
@@ -197,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < mCal.getActualMaximum(Calendar.DAY_OF_MONTH); i++) {
             mCalToday.set(year, month-1, (i+1));
-            arrData1.add(new DateClass((i+1), mCalToday.get(Calendar.DAY_OF_WEEK)));
+            arrData1.add(new DateClass((i+1), mCalToday.get(Calendar.DAY_OF_WEEK),year,month));
         }
 
         adapter = new DateAdapter(this, arrData1);
@@ -287,14 +285,15 @@ public class MainActivity extends AppCompatActivity {
 
     // delete
 
-    public void delete (String sday) {
+    public void delete (int year, int month, int day) {
 
 
         db = helper.getWritableDatabase();
+//        db.delete(SQLTableName, "dCount=?", new String[]{sday});
 
-        db.delete(SQLTableName, "dCount=?", new String[]{sday});
-
-        Log.i("db", sday + "정상적으로 삭제 되었습니다.");
+        String  sql = "delete from "+SQLTableName+" where sYear = "+year+" and sMonth= "+month+" and sDay="+day+";";
+        db.execSQL(sql);
+        Log.i("db", "정상적으로 삭제 되었습니다.");
 
     }
 
@@ -388,8 +387,8 @@ public class MainActivity extends AppCompatActivity {
             String sMonth = c.getString(c.getColumnIndex("sMonth"));
             String sDay = c.getString(c.getColumnIndex("sDay"));
 
-            Log.i("db", "selecUsingVacationCount_ sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
-                    + ", eYear : ");
+//            Log.i("db", "selecUsingVacationCount_ sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
+//                    + ", eYear : ");
 
             count++;
 
@@ -443,14 +442,30 @@ public class MainActivity extends AppCompatActivity {
             String memo = c.getString(c.getColumnIndex("memo"));
 
             saveYearMonthArray.add(new SaveDateClass(sYear, sMonth, sDay, eYear, eMonth, eDay,dCount,memo));
-            Log.d("main","==="+saveYearMonthArray.get(i).getsDate()[2]);
+//            Log.d("main","==="+saveYearMonthArray.get(i).getsDate()[2]);
             i++;
-            Log.i("db", "id: " + _id + ", sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
-                    + ", eYear : " + eYear + ", eMonth : " + eMonth + ", eDay : " + eDay
-                    + ", dCount : " + dCount + ", address : " + memo);
+//            Log.i("db", "id: " + _id + ", sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
+//                    + ", eYear : " + eYear + ", eMonth : " + eMonth + ", eDay : " + eDay
+//                    + ", dCount : " + dCount + ", address : " + memo);
 
         }
 
+    }
+    public boolean selectSearchDate(int year, int month, int day) {
+
+
+
+        // 1) db의 데이터를 읽어와서, 2) 결과 저장, 3)해당 데이터를 꺼내 사용
+
+
+
+        db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
+        String  sql = "select * from "+SQLTableName+" where sYear = "+year+" and sMonth= "+month+" and sDay="+day+";";
+        Cursor c = db.rawQuery(sql,null);
+        Log.d("mainactivity","c="+c);
+        Log.d("mainactivity","c.moveToNext="+c.moveToNext());
+
+        return c.moveToNext();
     }
 
 }
@@ -460,6 +475,7 @@ class DateAdapter extends BaseAdapter {
     private Context context;
     private ArrayList<DateClass> arrData;
     private LayoutInflater inflater;
+    private Holiday holiday = new Holiday();
 
     public DateAdapter(Context c, ArrayList<DateClass> arr) {
         this.context = c;
@@ -482,6 +498,7 @@ class DateAdapter extends BaseAdapter {
     public int getday(int position){ return arrData.get(position).getDay(); }
 
     public View getView(int position, View convertView, ViewGroup parent) {
+
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.viewitem, parent, false);
         }
@@ -489,38 +506,45 @@ class DateAdapter extends BaseAdapter {
 
         TextView ViewText = (TextView)convertView.findViewById(R.id.ViewText);
 //        GridView gridView = (GridView)convertView.findViewById(R.id.calGrid);
-        if(arrData.get(position) == null)
+        if(arrData.get(position) == null){
             ViewText.setText("");
-        else
-        {
-            ViewText.setText(arrData.get(position).getDay()+"");
-            if(arrData.get(position).getDayofweek() == 1)
+            convertView.setBackgroundColor(Color.GRAY);
+        }else
             {
-                ViewText.setTextColor(Color.RED);
+                ViewText.setText(arrData.get(position).getDay()+"");
+                if(arrData.get(position).getDayofweek() == 1)
+                {
+                    ViewText.setTextColor(Color.RED);
+                    convertView.setBackgroundColor(Color.WHITE);
+                }
+                else if(arrData.get(position).getDayofweek() == 7)
+                {
+                    ViewText.setTextColor(Color.BLUE);
+                    convertView.setBackgroundColor(Color.WHITE);
+                }
+                else
+                {
 
-
-            }
-            else if(arrData.get(position).getDayofweek() == 7)
-            {
-                ViewText.setTextColor(Color.BLUE);
-
-            }
-            else
-            {
-                ViewText.setTextColor(Color.BLACK);
-
-            }
-
-            for(int i=0 ; i<((MainActivity)MainActivity.mainAC).saveYearMonthArray.size() ; i++){
-
-                if(arrData.get(position).getDay() == parseInt(((MainActivity)MainActivity.mainAC).saveYearMonthArray.get(i).getsDate()[2])){
-//                    ViewText.setBackgroundColor(Color.MAGENTA);
-                    convertView.setBackgroundColor(Color.YELLOW);
+//                    Log.d("mainactivity","holiday.check(arrData.get(position).getFullDate())="+holiday.check(arrData.get(position).getFullDate()));
+//                    Log.d("mainactivity","holiday.check(arrData.get(position).getFullDate())="+arrData.get(position).getFullDate());
+                    if(holiday.check(arrData.get(position).getFullDate())){
+                        ViewText.setTextColor(Color.RED);
+                    }else{
+                        ViewText.setTextColor(Color.BLACK);
+                    }
+    //                    ViewText.setTextColor(Color.BLACK);
+                    convertView.setBackgroundColor(Color.WHITE);
                 }
 
+                for(int i=0 ; i<((MainActivity)MainActivity.mainAC).saveYearMonthArray.size() ; i++){
+
+                    if(arrData.get(position).getDay() == parseInt(((MainActivity)MainActivity.mainAC).saveYearMonthArray.get(i).getsDate()[2])){
+                        convertView.setBackgroundColor(Color.YELLOW);
+                    }
+
+                }
+    //            Log.d("main", "JT:>>>>>>>>"+((MainActivity)MainActivity.mainAC).saveDateArray.get(0).getsDate()[2]);
             }
-//            Log.d("main", "JT:>>>>>>>>"+((MainActivity)MainActivity.mainAC).saveDateArray.get(0).getsDate()[2]);
-        }
         ViewText.setHeight(150);
 
         return convertView;

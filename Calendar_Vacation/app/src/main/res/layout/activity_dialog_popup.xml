@@ -63,7 +63,7 @@
             android:layout_height="match_parent">
 
             <Button
-                android:text="@android:string/ok"
+                android:text="저장"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/vc_dialog_okbutton"
@@ -71,7 +71,7 @@
                 android:onClick="vcSaveButton" />
 
             <Button
-                android:text="@android:string/cancel"
+                android:text="취소"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/vc_dialog_cancelbutton"

@@ -120,6 +120,13 @@
         android:numColumns="7"
         android:layout_height="wrap_content"
         android:listSelector="@drawable/gridview_selector"
+        android:background="#90b0e0"
+        android:horizontalSpacing="1dp"
+        android:verticalSpacing="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginBottom="1dp"
+        android:layout_marginRight="1dp"
+        android:stretchMode="columnWidth"
         android:drawSelectorOnTop="true" />
 
     <LinearLayout

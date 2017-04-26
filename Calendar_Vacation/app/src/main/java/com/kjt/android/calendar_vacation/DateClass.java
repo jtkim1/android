@@ -7,10 +7,14 @@ package com.kjt.android.calendar_vacation;
 public class DateClass {
     int day;
     int dayofWeek;
+    int year, month;
+    String sMonth, sDay;
 
-    public DateClass(int d, int h){
+    public DateClass(int d, int h, int y, int m){
         day = d;
         dayofWeek = h;
+        year = y;
+        month = m;
     }
 
     public int getDay(){
@@ -19,5 +23,22 @@ public class DateClass {
 
     public int getDayofweek(){
         return dayofWeek;
+    }
+
+    public String getFullDate (){
+
+        if(month < 10){
+            sMonth = "0"+month;
+        }else{
+            sMonth = ""+month;
+        }
+
+        if(day < 10){
+            sDay = "0"+day;
+        }else{
+            sDay = ""+day;
+        }
+
+        return year+"-"+sMonth+"-"+sDay;
     }
 }

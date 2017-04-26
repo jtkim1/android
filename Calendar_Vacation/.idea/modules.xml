@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Calendar_Vacation.iml" filepath="$PROJECT_DIR$/Calendar_Vacation.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/icu4j-4.8.1/icu4j-4.8.1.iml" filepath="$PROJECT_DIR$/icu4j-4.8.1/icu4j-4.8.1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/icu4j-charset-4_8_1/icu4j-charset-4_8_1.iml" filepath="$PROJECT_DIR$/icu4j-charset-4_8_1/icu4j-charset-4_8_1.iml" />
       <module fileurl="file://$PROJECT_DIR$/icu4j-localespi-4_8_1/icu4j-localespi-4_8_1.iml" filepath="$PROJECT_DIR$/icu4j-localespi-4_8_1/icu4j-localespi-4_8_1.iml" />
     </modules>
   </component>
