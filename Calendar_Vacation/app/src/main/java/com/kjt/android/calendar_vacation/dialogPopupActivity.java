@@ -52,6 +52,7 @@ public class dialogPopupActivity extends Activity {
 
         dbCheck = ((MainActivity)MainActivity.mainAC).selectSearchDate(selectYear,selectMonth,selectday);
         TextView leftButton = (TextView) findViewById(R.id.vc_dialog_okbutton);
+
         if(dbCheck){
             leftButton.setText("삭제");
         }else{

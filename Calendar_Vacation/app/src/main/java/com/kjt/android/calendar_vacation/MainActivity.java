@@ -453,19 +453,15 @@ public class MainActivity extends AppCompatActivity {
     }
     public boolean selectSearchDate(int year, int month, int day) {
 
-
-
-        // 1) db의 데이터를 읽어와서, 2) 결과 저장, 3)해당 데이터를 꺼내 사용
-
-
-
+        // db 에 해당 날짜가 있으면 true, 없으면 false;
         db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
         String  sql = "select * from "+SQLTableName+" where sYear = "+year+" and sMonth= "+month+" and sDay="+day+";";
         Cursor c = db.rawQuery(sql,null);
         Log.d("mainactivity","c="+c);
-        Log.d("mainactivity","c.moveToNext="+c.moveToNext());
+        boolean checkValue = c.moveToNext();
+        Log.d("mainactivity","c.checkValue="+checkValue);
 
-        return c.moveToNext();
+        return checkValue;
     }
 
 }
