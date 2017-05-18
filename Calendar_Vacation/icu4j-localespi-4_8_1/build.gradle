@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('icu4j-localespi-4_8_1.jar'))

@@ -174,20 +174,5 @@
                 android:layout_weight="1" />
         </LinearLayout>
 
-        <TextView
-            android:text="메모"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/textView3" />
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
-            android:ems="10"
-            android:id="@+id/editText3"
-            android:focusable="false"
-            android:focusableInTouchMode="false" />
-
     </LinearLayout>
 </LinearLayout>

@@ -57,6 +57,19 @@
 
         </LinearLayout>
 
+        <TextView
+            android:text="메모 :"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/memoTextView" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:id="@+id/memoTextValue" />
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"

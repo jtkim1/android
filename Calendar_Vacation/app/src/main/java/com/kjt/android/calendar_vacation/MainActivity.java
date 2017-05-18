@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 null, // 커서 팩토리
 
                 1); // 버전 번호
-        selectYearMonth(2017,04);
+//        selectYearMonth(2017,04);
 //        select();
 //        delete("1");
         final int usingCount = selecUsingVacationCount();
@@ -119,10 +119,21 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("year",thisYear);
                 intent.putExtra("month",(thisMonth-1));
                 intent.putExtra("dayOfMonth",adapter.getday(position));
+                for(int i=0; i<saveYearMonthArray.size() ; i++){
+//                    Log.d("jtjtjtjtj=","year="+saveYearMonthArray.get(i).getsDate()[0].equals(thisYear+""));
+//                    Log.d("jtjtjtjtj=","month="+saveYearMonthArray.get(i).getsDate()[1].equals(thisMonth+""));
+//                    Log.d("jtjtjtjtj=","day="+saveYearMonthArray.get(i).getsDate()[2].equals(""+adapter.getday(position)));
+                    if(saveYearMonthArray.get(i).getsDate()[0].equals(thisYear+"") && saveYearMonthArray.get(i).getsDate()[1].equals(thisMonth+"") &&
+                            saveYearMonthArray.get(i).getsDate()[2].equals(""+adapter.getday(position))){
 
-                Log.d("MainActivity","thisYear="+thisYear);
-                Log.d("MainActivity","thisMonth="+thisMonth);
-                Log.d("MainActivity","day="+ adapter.getday(position));
+                        intent.putExtra("dayOfMemo",saveYearMonthArray.get(i).getsDate()[3]);
+                        break;
+                    }
+                }
+
+//                Log.d("MainActivity","thisYear="+thisYear);
+//                Log.d("MainActivity","thisMonth="+thisMonth);
+//                Log.d("MainActivity","day="+ adapter.getday(position));
 
                 startActivity(intent);
             }
@@ -348,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
             i++;
             Log.i("db", "id: " + _id + ", sYear : " + sYear + ", sMonth : " + sMonth + ", sDay : " + sDay
                     + ", eYear : " + eYear + ", eMonth : " + eMonth + ", eDay : " + eDay
-                    + ", dCount : " + dCount + ", address : " + memo);
+                    + ", dCount : " + dCount + ", memo : " + memo);
 
         }
 
@@ -457,7 +468,6 @@ public class MainActivity extends AppCompatActivity {
         db = helper.getReadableDatabase(); // db객체를 얻어온다. 읽기 전용
         String  sql = "select * from "+SQLTableName+" where sYear = "+year+" and sMonth= "+month+" and sDay="+day+";";
         Cursor c = db.rawQuery(sql,null);
-        Log.d("mainactivity","c="+c);
         boolean checkValue = c.moveToNext();
         Log.d("mainactivity","c.checkValue="+checkValue);
 
@@ -504,7 +514,7 @@ class DateAdapter extends BaseAdapter {
 //        GridView gridView = (GridView)convertView.findViewById(R.id.calGrid);
         if(arrData.get(position) == null){
             ViewText.setText("");
-            convertView.setBackgroundColor(Color.GRAY);
+//            convertView.setBackgroundColor(Color.GRAY);
         }else
             {
                 ViewText.setText(arrData.get(position).getDay()+"");
